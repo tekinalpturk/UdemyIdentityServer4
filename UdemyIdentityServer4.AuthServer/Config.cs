@@ -18,6 +18,7 @@ namespace UdemyIdentityServer4.AuthServer
                 }
             };
         }
+
         public static IEnumerable<ApiScope> GetApiScopes()
         {
             return new List<ApiScope>()
@@ -28,6 +29,29 @@ namespace UdemyIdentityServer4.AuthServer
                 new ApiScope("api2.read","Api 2 için okuma izni"),
                 new ApiScope("api2.write","Api 2 için yazma izni"),
                 new ApiScope("api2.update","Api 2 için güncelleme izni")
+            };
+        }
+
+        public static IEnumerable<Client> GetClients()
+        {
+            return new List<Client>
+            {
+                new Client()
+                {
+                    ClientId = "Client1",
+                    ClientName = "Client1 app uygulaması",
+                    ClientSecrets = new  []{new Secret("secret".Sha256())},
+                    AllowedGrantTypes = GrantTypes.ClientCredentials,
+                    AllowedScopes = new []{ "api1.read","api2.write","api2.update"}
+                },
+                new Client()
+                {
+                    ClientId = "Client2",
+                    ClientName = "Client2 app uygulaması",
+                    ClientSecrets = new  []{new Secret("secret".Sha256())},
+                    AllowedGrantTypes = GrantTypes.ClientCredentials,
+                    AllowedScopes = new []{ "api1.read","api2.write","api2.update"}
+                }
             };
         }
     }

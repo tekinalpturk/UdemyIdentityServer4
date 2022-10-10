@@ -106,6 +106,8 @@
   - client credentials grant (without login)
     - Client kimliği ile izin alma işlemi
     - machine to machine de deniliyor
+    - AllowedGrantTypes = GrantTypes.ClientCredentials
+    - eğer ClientId ve secret gönderilirse seçtiğimiz bu akışa uygun bir token döneceğiz.
   - Sunucu tarafında tanımlanan grants:
     - Api Scope
     - API resource:
