@@ -93,5 +93,24 @@
 
 ## Client Credentials Grant nedir?
 
-<img src=".\identity server 4 tutorial\image-20221010121444565.png" alt="image-20221010121444565" style="zoom:33%;" />
+<img src=".\identity server 4 tutorial\image-20221010121444565.png" alt="image-20221010123618055" style="zoom:33%;" />
+
+- Yemek tarifleri sitemizin herhangi bir login sayfası ve üyelik sistemi yok. Server ve API'ları koruma altına almak istiyoruz. Başkaları erişemesin.
+- API'lardan data alabilmek için mutlaka bir Access Token (= token) göndermeliyiz. We also have refresh token that is sent to server after expiration for getting a new access token. Tokenların hepsi jwt. Refresh token ların ömrü access tokenlara göre daha uzundur.
+- For this first I have to define all API's and also Clients inside AuthServer. Then we will define the access level for each client.
+- Bir API token alınca önce headerdaki tokenı ayrıştıracak ve daha sonra gerçekten bu token AuthServer mi dağıtmış onu doğrulayacak ve geçerli ise Client'a response dönecek.
+- OAuth 2.0 Grants (izin tipleri):
+  - Authorization code grant (with login)
+  - Implicit grant (with login)
+  - Resource owner credentials grant (with login)
+  - client credentials grant (without login)
+    - Client kimliği ile izin alma işlemi
+    - machine to machine de deniliyor
+  - Sunucu tarafında tanımlanan grants:
+    - Api Scope
+    - API resource:
+      - API'ları tanımlıyoruz. Hangi API'lere erişimimiz var gibi.
+      - Yetki alanını belirler. Yani Client hangi yetkilere sahiptir ve hangi metotlara erişimi vardır. Api1 A metoduna ve read yetkisine sahiptir 
+- IdentityServer 4 nuget i kuracağız
+
 
