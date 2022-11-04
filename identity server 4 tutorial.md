@@ -246,7 +246,30 @@ Client'lardan API istekleri yapma
   
   ```
 
-  
+### OAuth2.0 Grants:
 
-- i
+  - 4 tür grant var https://oauth.net/2/grant-types/
+      - Authorization code grant (requires login)
+      - Implicit grant (requires login)
+      - Resource Owner credentials grant (requires login)
+      - client credentials grant. Geçen derste ClientCredentialGrant'e baktık
+  - 1- **Authorization code grant** [Official documentation Link](https://www.rfc-editor.org/rfc/rfc6749#section-1.3.1:~:text=2012%0A%0A%0A4.1.-,Authorization%20Code%20Grant,-The%20authorization%20code)
+      - <img src="C:\Users\Tekint\Desktop\phenoms\Identity Server Tutorial\UdemyIdentityServer4\identity server 4 tutorial\image-20221104115435182.png" alt="image-20221104115435182" style="zoom: 80%;" />
+      - Resource owner: Dataların sahibi yani User. User bilgilerinin (Username, password, ...) sahibi
+      - [User-Agent](https://www.rfc-editor.org/rfc/rfc2616#:~:text=of%20sending%0A%20%20%20%20%20%20requests.-,user%20agent,-The%20client%20which): Bizim tarayıcımız. The client which initiates a request. These are often browsers,
+        editors, spiders (web-traversing robots), or other end user tools.
+      - Client: Taryıcıda çalışan uygulamamız. SPA, .netcore, java veya nodejs olabilir.
+      - Authorization server: token dağıtan yer.
+      - **Birönceki yöntemde(client credentials grant) client direct credentials verdi ve accesstoken aldı ama bu sefer (Authorization code grant) login olarak önce authorization code alıyor ve daha sonra bu code'u client tarafında kullanarak access token alıyor.**
+      - Akış:
+          - Kullanıcı User-Agent'a geliyor ve user-agent A, B ve C bilgileri ile Authorization Server'a  login olmak için yönlendiriyor.
+          - Login bitince geri Authorization code dönüyor. Bu tarayıcıya dönüyor. Bu authorization code token almak için kullanılabilir.
+      - Eğer web uygulamamız varsa ve backend uygulaması ise Authorization Server tarafından Access Token yerine cookie gelecek. forntend, SAPveya mobil uygulama token bazlı çalışacak.
+      - Client sayısı fazla ise bu yöntem iyi.
+  - 2- **Implicit Grant**:
+      - Bu yöntem *Authorization Code Grant*'ten farklı olarak 2 kere Authorization Server'a gitmez ve bir kerede accesstoken alır. Daha fazla tercih edilir. Mobil uygulamalar ve SPA için daha uygundur. 
+  - 3- **Resource owner credentials grant**: %80
+      - Bu en önemlisi ve yaygın kullanılır. Auth server, Client ve API'ler aynı şirketin bünyesinde olunca kullanılır.
+      - Diğer yöntemler login olmak için başka siteye yönlendiriliyorlar ama biz her şeyin sahibi isek başka sayfaya yönlendirmektense aynı uygulamada bir sayfa oluşturup, arkada AuthServer'a gidelim.
+      - Client sayısı azsa başka login için başka siteye yönlenmek kullanıcı deneyimi açısından iyi bir şey değil.
 
