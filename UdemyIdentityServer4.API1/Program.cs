@@ -1,4 +1,25 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, opts =>
+{
+    opts.Authority = "https://localhost:5001";//jwt token'ý Yayýnlayaný kim
+    opts.Audience = "resource_api1"; // Is the resource defined in auth service GetApiResources()
+});
+
+builder.Services.AddAuthorization(opts =>
+{
+    opts.AddPolicy("ReadProduct", policy =>
+    {
+        policy.RequireClaim("scope", "api1.read");
+    });
+    opts.AddPolicy("UpdateOrCreate", policy =>
+    {
+        policy.RequireClaim("scope", new[] { "api1.update", "api1.create" });
+    });
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -18,7 +39,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthorization();
+app.UseAuthentication(); //doðrulanma
+app.UseAuthorization(); //Yetkilendirme
 
 app.MapControllerRoute(
     name: "default",

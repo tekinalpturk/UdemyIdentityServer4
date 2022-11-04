@@ -1,5 +1,12 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, opts =>
+{
+    opts.Authority = "https://localhost:5001";//jwt token'ý Yayýnlayaný kim
+    opts.Audience = "resource_api2"; // Is the resource defined in auth service GetApiResources()
+});
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -18,6 +25,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

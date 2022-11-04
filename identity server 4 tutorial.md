@@ -36,7 +36,7 @@
   - <img src=".\identity server 4 tutorial\image-20221006165949066.png" alt="image-20221006165949066" style="zoom: 50%;" />
   - bu yöntemi kullanarak artık kullanıcı ana siteden üye oldu ve bilgileri 3. bir site ile paylaşılmadı.
   - A Bankasında tanımlanan yetkilere erişimi olacak myFinansın. My finans da tokenla gelen bilgileri (örneğin yetkileri) cookie veya spa ise storage'da tutar
-  - **Kullanıcı yerine ilgili siteden veri çekmemize imkan sağlıyor.**
+  - Kullanıcı yerine ilgili siteden veri çekmemize imkan sağlıyor.
 
 ## What is OpenId connect
 
@@ -81,7 +81,7 @@
     - dış dünyayla token ile bağlantı kurar
   - token-based auth
     - SAP ve mobile app
-  - <img src=".\identity server 4 tutorial\image-20221007194838332.png" alt="image-20221007194838332" style="zoom:33%;" />
+  - <img src=".\identity server 4 tutorial\image-20221007194838332.png" alt="image-20221007194838332" style="zoom: 50%;" />
 - Ne yapmak istiyoruz?
   - <img src=".\identity server 4 tutorial\image-20221007200051676.png" alt="image-20221007200622914" style="zoom:33%;" />
 
@@ -105,14 +105,148 @@
   - Resource owner credentials grant (with login)
   - client credentials grant (without login)
     - Client kimliği ile izin alma işlemi
-    - machine to machine de deniliyor
-    - AllowedGrantTypes = GrantTypes.ClientCredentials
-    - eğer ClientId ve secret gönderilirse seçtiğimiz bu akışa uygun bir token döneceğiz.
+    - Machine to machine de deniliyor
+    - Bu ayar yapılmalı: `AllowedGrantTypes = GrantTypes.ClientCredentials`
+    - Eğer ClientId ve secret gönderilirse seçtiğimiz bu akışa uygun bir token döneceğiz.
+    - ClientCredentials olduğunda refresh token üretemeyiz
   - Sunucu tarafında tanımlanan grants:
     - Api Scope
     - API resource:
       - API'ları tanımlıyoruz. Hangi API'lere erişimimiz var gibi.
       - Yetki alanını belirler. Yani Client hangi yetkilere sahiptir ve hangi metotlara erişimi vardır. Api1 A metoduna ve read yetkisine sahiptir 
 - IdentityServer 4 nuget i kuracağız
+- **AddDeveloperSigningCredential**:
+  - There are two types of passwords:
+    - <u>Symmetric passwords</u>: jwt **imzalarken** kullanmış olduğum <u>şifreyi aynı zamanda</u> jwt'yi **doğrulamak** için de kullanıyorsam bu simmetric bir şifredir.
+    - <u>Asymmetric passwords</u>: Asymmetric şifrenin 2 key'i var **Private** ve **public**. Private kimse ile paylaşılmaz ama public şifreyi kim çözecekse onunla paylaşılır ve public key' sahip olan kişi Private Key'i doğrulayabilir. 
+  - Identity Server jwt'ları imzalamak için Asymmetric şifre kullanır. AuthServer token dağıtmadan önce ilgii token'ı private key ile beraber şifreler. Auth Serverda 2 key bulunur private ve public key. Private key kendi içindedir ve kimse ile paylaşmaz ama public key API'lar la paylaşılabilir. Sunucu jwt'yi privatekey ile imzalar ve ilgili clientlara gönderir. API'ler ise clienttan gelen tokenı doğrulamalı ve bunu public key ile yapar. Public key almak için de AuthServer'a sorgu atar. Bunlar otomatik yapılıyor zaten.
+  - API'lar public key almaları için Auth Server adresine ihtiyaçları var
+  - **AddDeveloperSigningCredential** development esnasında kullanabileceğimiz public ve private key'ler oluşturur.
+  - Ama production için de **AddSigningCredential** kullanacak. Bu credentials Azure tarafında (Host tarafında) tutulacak ve Azurdan çekip kullanmam gerekecek. Uygulamanın içinde olmamalı bu credentials. 
+  - Ayrıca middleware olarak ekleyebilmemiz için `app.UseIdentityServer()` kodunu da startupa eklememiz lazım
+- **IdentityServer Endpoints**:
+  - These endpoints are generated automatically: [DOCS link](https://docs.identityserver.io/en/latest/endpoints/discovery.html) 
+    - Discovery Endpoint: Projedeki var olan endpointleri döner, 
+    - Authorize Endpoint: Authorize olmak için,
+    - Token Endpoint: Token almak için,
+    - UserInfo Endpoint: Kullanıcı bilgileri almak için,
+    - Device Authorization Endpoint: TV gibi clientlar için tanımlanmış bir Endpoint. Kullanıcı bilgileri girmek zor olan senaryolar için farklı bir akış burası, 
+    - Introspection Endpoint: jwt .io nun işini görüyor ve decode ediyor jwt'yi
+    - Revocation Endpoint: Token'ı geçersiz yapabilmek için, Client datası çalınırsa mesela
+    - End Session Endpoint: Kullanıcı ile ilgili var olan sessionu sonlandırmak için kullanılır
+- **Jwt'nin parçaları:**
+  - headerda kullanılan algoritma ve tipi belirlenir
+  - payload da datalar yer alır. Aud bölümü hangi API'a istek yapabileceğimizi gösterir. Tokenın ömrü de exp'te gösteriliyor.
+  - 3 . kısım da imza kısmı
+- jwt'nin içeriğini diğerleri de görebiliyor bunun sakıncası yok mu?
+  - Yok. Çünkü, privatekey ile imzalanmış bu token ve değiştirilse ortaya çıkar. public key API'larda ve Private key sadece IdentityServerda.
+  - <img src=".\identity server 4 tutorial\image-20221102180841711.png" alt="image-20221102180841711" style="zoom:33%;" />
 
+- **API Ayarları:**
+
+  - Install `Microsoft.AspNetCore.Authentication.JwtBearer`
+
+  - add to startup:
+  
+    ```c#
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, opts =>
+    {
+        opts.Authority = "https://localhost:5001";//jwt token'ı Yayınlayanı kim
+        opts.Audience = "resource_api1"; // Is the resource defined in auth service GetApiResources()
+    });
+    ```
+  
+    ​      
+
+  - Schema also can be a string name. Schema holds the authentication instance. Örneğin 2 tür üyelik sisteminiz varsa schema ayırabiliriz.
+
+  - AddJwtBearer : ~~Uygulamadaki schema ile AddJwtBearer daki schema ismi aynı ise uygulamadaki authentication mekanizması jwt'ye bağlanmış olur~~ 2 kod aynı olmalı yani JwtBearerDefaults.AuthenticationScheme veya herhangi bir string
+
+  - add `app.UseAuthentication();` on top of `app.UseAuthorization();`
+
+  - Add methods to controllers:
+
+      - API methodlarımı dış dünyaya kapatmam için `[Authorize] ` methodun başına eklemem yeterli olacaktır'
+      - `[Authorize] ` Ekledikten sonra methoda erişemeyeceğiz 401 alacağız. Erişmek için Kurduğumuz IS'dan bir token alacağız ve onu bizim postman requestinin Authentication bölümüne yapıştıracağız. Tabi böyle bir tanım yapıldıysa. Bu tabda da **OAuth2.0** seçiyoruz ve Header Prefix olarak da **Bearer** Ekliyoruz. Bu sefer sorgumuz hatasız çalışacaktır.
+
+  - **Role bazlı yetkilendirme ve claim bazlı yetkilendirme var**, Role based Authorization login yapan kullanıcı bazlıdır o yüzden şimdilik claim bazlı yetkilendirmeden bahs edeceğiz.
+
+  - Role Based yetkilendirme, kullanıcı gruplarına yetki vermek gibidir (örneğin, biletçiler) ama bu kullanıcının bir datası ile yetkilendirme yapamaz yani İstanbullular erişsin gibi. Buna göre kullanıcının yaşına göre yetkilendirmeyi Claim bazlı yapmalıyız
+
+  - Her API'ın hem authentication hem de Authorizationu var. Authentication sadece kullanıcının login olması anlamına gelmiyor.
+
+  - API'lere Authorization ekleme - Claim bazlı yetkilendirme:
+
+      - Bu sefer **Policy** ekleyeceğiz. (Şartname)
+
+        ```c#
+        /*Add this code under Add Authentication inside API startup*/
+        builder.Services.AddAuthorization(opts =>
+        {
+            opts.AddPolicy("ReadProduct", policy =>
+            {
+                policy.RequireClaim("scope", "api1.read");
+            });
+            opts.AddPolicy("UpdateOrCreate", policy =>
+            {
+                policy.RequireClaim("scope", new[] { "api1.update", "api1.create" });
+            });
+        });
+        ```
+
+        
+
+      - Şimdi her methodun başına `[Authorize("UpdateOrCreate")]` gibi attribute eklersek sadece API'ye erişim yeterli olmayacaktır ve ayrıca her clientın scope tanımı da olacaktır ki bizde policy sağlasın ve API'lerimizi kullansın.
+
+Discovery EndPoint:
+
+- IdentityServer ile ilgili bilgileri bize veriyor. Bunun içinde tüm yukarıda bahs edilen endpointlara bir link ve supported scopes gibi datalara erişebiliyoruz.
+
+Introspect EndPoint: [Help Link](https://docs.identityserver.io/en/latest/endpoints/introspection.html#example)
+
+- It is used by API's and it can be used to validate reference tokens. It will tell the API if it is valid. It will need api secret and also a token that is generated by any of clients.
+- jwt'ı deşifre(parse) ediyor. Yetkileri görebilirsiniz. 
+- basicAuth yapılmalı bu API'yi çağırmak için
+- Bunun için de IdentityServer projesinde Resource bölümünde API'a bir secret tanımlamalıyız
+
+Client'lardan API istekleri yapma
+
+- Ajax istekleri için cors tanımı yapılmalı. İstekler tarayıcıdan gelecekse API'lerin içinde cors özelliği açılmalı. Bu siteden gelen istekleri kabul et diyoruz aslında. Şimdilik biz server side istekler yaptığımız için CORS tanımı yapmıyoruz. Angular ve SPA'ler CORS ayarına ihtiyaçları var.
+
+- IdentityModel nuget paketini projeye ekliyoruz. Bu paket HttpClient'ımıza extension methodlar ekliyor.
+
+  ```c#
+  public async Task<IActionResult> Index()
+  {
+      HttpClient httpClient = new HttpClient();
+  
+      var disco = await httpClient.GetDiscoveryDocumentAsync("https://localhost:5001");//I would prefer to add the addresses manually instead of an extra call
+      if (disco.IsError) { return View("Error"); }
+  
+      ClientCredentialsTokenRequest clientCredentialsTokenRequest = new ClientCredentialsTokenRequest()
+      {
+          ClientId = _configuration["Client:ClientId"],
+          ClientSecret = _configuration["Client:ClientSecret"],
+          Address = disco.TokenEndpoint
+      };
+  
+      var token = await httpClient.RequestClientCredentialsTokenAsync(clientCredentialsTokenRequest);
+      if (token.IsError) { return View("Error"); }
+  
+      httpClient.SetBearerToken(token.AccessToken);
+  
+      var response = await httpClient.GetAsync("https://localhost:5016/api/Product/GetProducts");
+      if(response.IsSuccessStatusCode)
+      {
+          var contest = await response.Content.ReadAsStringAsync();
+      }
+  
+      return View();
+  }
+  
+  ```
+
+  
+
+- i
 
